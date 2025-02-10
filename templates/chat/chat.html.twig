@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Symfony + Hugging Face</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #chat-container { width: 50%; margin: auto; }
+        .message { padding: 10px; margin: 5px; border-radius: 5px; }
+        .user { background: #d1e7fd; text-align: right; }
+        .bot { background: #d4edda; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <h2>Chatbot Symfony + Hugging Face</h2>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="user-input" placeholder="Digite sua mensagem..." />
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
+
+    <script>
+        function sendMessage() {
+            let userMessage = $("#user-input").val();
+            if (!userMessage) return;
+
+            $("#chat-box").append(`<div class="message user"><strong>Você:</strong> ${userMessage}</div>`);
+            $("#user-input").val('');
+
+            $.ajax({
+                url: "/chat",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ message: userMessage }),
+                success: function(response) {
+                    $("#chat-box").append(`<div class="message bot"><strong>Bot:</strong> ${response.message}</div>`);
+                },
+                error: function() {
+                    $("#chat-box").append(`<div class="message bot"><strong>Bot:</strong> Erro ao conectar.</div>`);
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
