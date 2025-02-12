@@ -11,5 +11,5 @@ index:
 chat:
     path: /chat
     controller: App\Controller\ChatController::chat
-    methods: POST
+    methods: GET|POST
     

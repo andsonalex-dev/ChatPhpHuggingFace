@@ -18,29 +18,35 @@ final class ChatController extends AbstractController
         $this->httpClient = $httpClient;
     }
 
-    #[Route('/chat', name: 'chat', methods: ['POST'])]
-    public function chat(Request $request): JsonResponse
+    #[Route('/chat', name: 'chat')]
+    public function chat(Request $request): Response|JsonResponse
     {
-        $apiKey = $this->getParameter('huggingface_api_key');
-        $data = json_decode($request->getContent(), true);
-        $message = $data['message'] ?? '';
-
-        if (!$message) {
-            return new JsonResponse(['error' => 'Mensagem vazia!'], 400);
+        if ($request->isMethod('POST')) {
+            $apiKey = $this->getParameter('huggingface_api_key');
+            $data = json_decode($request->getContent(), true);
+            $message = $data['message'] ?? '';
+    
+            if (!$message) {
+                return new JsonResponse(['error' => 'Mensagem vazia!'], 400);
+            }
+    
+            $response = $this->httpClient->request('POST', 'https://api-inference.huggingface.co/models/distilgpt2', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => ['inputs' => $message],
+                'timeout' => 30,
+            ]);
+    
+            $result = $response->toArray();
+            $reply = $result[0]['generated_text'] ?? 'Erro ao obter resposta.';
+    
+            return new JsonResponse(['message' => $reply]);
         }
-
-        $response = $this->httpClient->request('POST', 'https://api-inference.huggingface.co/models/distilgpt2', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $apiKey,
-                'Content-Type' => 'application/json',
-            ],
-            'json' => ['inputs' => $message],
-            'timeout' => 30,
+    
+        return $this->render('chat/chat.html.twig', [
+            'controller_name' => 'ChatController',
         ]);
-
-        $result = $response->toArray();
-        $reply = $result[0]['generated_text'] ?? 'Erro ao obter resposta.';
-
-        return new JsonResponse(['message' => $reply]);
     }
 }
